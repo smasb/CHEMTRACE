@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1714">
+<title>CHEMTRACE | Environmental Monitor</title>
+
+<style>
+:root {
+  --bg: #0b1714;
+  --panel: #12231e;
+  --panel2: #172b24;
+  --border: #294238;
+  --text: #edf7f1;
+  --muted: #9bb2a6;
+  --green: #55d6a0;
+  --green2: #2ba879;
+  --yellow: #f2c66d;
+  --red: #ff7777;
+  --sidebar: 250px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, input { font: inherit; }
+
+.app { min-height: 100vh; }
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar);
+  padding: 25px 18px;
+  background: #0e1e19;
+  border-right: 1px solid var(--border);
+  z-index: 20;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 7px 27px;
+}
+
+.brand-mark {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #082016;
+  background: var(--green);
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.brand-name { font-size: 19px; font-weight: 800; letter-spacing: 1.5px; }
+.brand-sub { color: var(--muted); font-size: 10px; letter-spacing: 1.7px; margin-top: 3px; }
+
+.nav-label {
+  color: #718b7e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  padding: 13px 10px 9px;
+  text-transform: uppercase;
+}
+
+.nav-link {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  padding: 12px 11px;
+  margin: 3px 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-link:hover, .nav-link.active {
+  background: #1a342a;
+  color: var(--green);
+}
+
+.nav-icon { width: 21px; text-align: center; font-size: 17px; }
+
+.sidebar-note {
+  margin-top: 28px;
+  padding: 14px;
+  background: #142820;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.main {
+  margin-left: var(--sidebar);
+  padding: 27px clamp(17px, 3vw, 42px) 35px;
+  max-width: 1600px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 28px;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.menu-button {
+  display: none;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.eyebrow {
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 1.7px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+h1 { font-size: clamp(23px, 3vw, 31px); margin: 5px 0 0; }
+.subtitle { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+.top-actions { display: flex; align-items: center; gap: 12px; }
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 9px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+.dot.live { background: var(--green); box-shadow: 0 0 10px #55d6a088; }
+.dot.offline { background: var(--red); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 27px 0 13px;
+}
+.section-heading h2 { font-size: 16px; margin: 0; }
+.section-heading p { color: var(--muted); font-size: 12px; margin: 5px 0 0; }
+
+.location-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(110deg, #17372b, #142820 70%);
+  border: 1px solid #2b5944;
+  border-radius: 15px;
+  padding: 19px 21px;
+}
+.location-title { font-size: 18px; font-weight: 750; }
+.location-meta { color: #a9c6b7; font-size: 12px; margin-top: 5px; }
+.location-symbol { font-size: 28px; }
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sensor-card { position: relative; overflow: hidden; }
+.sensor-card::after {
+  content: "";
+  position: absolute;
+  right: -24px;
+  top: -27px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #55d6a010;
+}
+.sensor-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sensor-name { color: var(--muted); font-size: 13px; }
+.sensor-icon {
+  width: 35px; height: 35px; display: grid; place-items: center;
+  border-radius: 10px; background: #1e3b2e; font-size: 17px;
+}
+.sensor-value { font-size: clamp(26px, 3vw, 35px); font-weight: 750; margin: 18px 0 5px; letter-spacing: -1px; }
+.sensor-unit { font-size: 13px; color: var(--muted); font-weight: 500; }
+.sensor-foot { color: var(--muted); font-size: 11px; margin-top: 12px; }
+.sensor-state { color: var(--green); font-size: 11px; margin-top: 8px; }
+
+.comparison-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.compare-card h3 { font-size: 13px; margin: 0 0 15px; }
+.compare-values { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+.compare-values strong { color: var(--text); font-size: 14px; }
+.delta { margin-top: 12px; font-size: 12px; font-weight: 700; }
+.delta.normal { color: var(--green); }
+.delta.warning { color: var(--yellow); }
+.delta.alert { color: var(--red); }
+.progress { height: 6px; border-radius: 10px; background: #263b32; overflow: hidden; margin-top: 13px; }
+.progress-fill { height: 100%; width: 0%; background: var(--green); border-radius: inherit; transition: width .3s ease; }
+
+.info-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
+.alert-row { display: flex; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.alert-row:last-child { border-bottom: 0; }
+.alert-mark { width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-top: 5px; flex: 0 0 auto; }
+.alert-mark.warning { background: var(--yellow); }
+.alert-mark.alert { background: var(--red); }
+.alert-title { font-size: 12px; font-weight: 700; }
+.alert-detail { color: var(--muted); font-size: 11px; margin-top: 4px; line-height: 1.5; }
+.muted { color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+.settings-panel { display: none; }
+.settings-panel.open { display: block; }
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.field label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 7px; }
+.field input {
+  width: 100%; background: #0c1b16; color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 11px;
+  outline: none;
+}
+.field input:focus { border-color: var(--green); }
+.button-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+.btn {
+  border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;
+  background: #1b3529; color: var(--green); cursor: pointer; font-size: 12px; font-weight: 700;
+}
+.btn.primary { background: var(--green); color: #082016; border-color: var(--green); }
+.btn:hover { filter: brightness(1.1); }
+
+.footer { text-align: center; color: #70877b; font-size: 11px; padding: 30px 0 5px; }
+.overlay { display: none; }
+
+@media (max-width: 900px) {
+  :root { --sidebar: 225px; }
+  .sensor-grid, .comparison-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .info-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 650px) {
+  .sidebar { transform: translateX(-100%); transition: transform .25s ease; width: 270px; }
+  .sidebar.open { transform: translateX(0); }
+  .menu-button { display: inline-block; }
+  .main { margin-left: 0; padding: 18px 14px 25px; }
+  .topbar { align-items: flex-start; }
+  .top-actions { flex-direction: column; align-items: flex-end; gap: 7px; }
+  .sensor-grid, .comparison-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .panel { padding: 15px; }
+  .sensor-value { font-size: 25px; }
+  .location-banner { padding: 15px; }
+  .settings-grid { grid-template-columns: 1fr; }
+  .overlay.show { display: block; position: fixed; inset: 0; background: #0009; z-index: 15; }
+}
+@media (max-width: 390px) {
+  .sensor-grid, .comparison-grid { grid-template-columns: 1fr; }
+  .live-pill { font-size: 10px; padding: 7px 9px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div>
+        <div class="brand-name">CHEMTRACE</div>
+        <div class="brand-sub">FRESHWATER INTELLIGENCE</div>
+      </div>
+    </div>
+
+    <div class="nav-label">Monitoring</div>
+    <a class="nav-link active" href="#overview" onclick="closeSidebar()"><span class="nav-icon">◫</span> Overview</a>
+    <a class="nav-link" href="#sensors" onclick="closeSidebar()"><span class="nav-icon">⌁</span> Live sensors</a>
+    <a class="nav-link" href="#baseline" onclick="closeSidebar()"><span class="nav-icon">⇄</span> Baseline comparison</a>
+    <a class="nav-link" href="#alerts" onclick="closeSidebar()"><span class="nav-icon">⚑</span> Alerts</a>
+
+    <div class="nav-label">Configuration</div>
+    <button class="nav-link" onclick="toggleSettings()"><span class="nav-icon">⚙</span> Site settings</button>
+    <button class="nav-link" onclick="document.getElementById('google_translate_element').scrollIntoView({behavior:'smooth'})"><span class="nav-icon">文</span> Language</button>
+
+    <div class="sidebar-note">
+      <strong style="color:var(--green)">Protecting biodiversity</strong><br>
+      CHEMTRACE tracks changes in freshwater conditions to help conservationists identify locations that may need investigation.
+    </div>
+  </aside>
+
+  <main class="main" id="overview">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-button" onclick="openSidebar()" aria-label="Open menu">☰</button>
+        <div>
+          <div class="eyebrow">Environmental intelligence</div>
+          <h1>Monitoring dashboard</h1>
+          <div class="subtitle">Live freshwater ecosystem observations</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="live-pill"><span class="dot" id="connectionDot"></span><span id="connectionText">Connecting...</span></div>
+      </div>
+    </header>
+
+    <section class="location-banner">
+      <div>
+        <div class="eyebrow">Current monitoring site</div>
+        <div class="location-title" id="siteNameDisplay">Freshwater monitoring site</div>
+        <div class="location-meta" id="locationDisplay">Location not configured</div>
+      </div>
+      <div class="location-symbol">⌖</div>
+    </section>
+
+    <div class="section-heading" id="sensors">
+      <div><h2>Live sensor readings</h2><p>Most recent readings received from the monitoring device</p></div>
+    </div>
+
+    <section class="sensor-grid">
+      <article class="panel sensor-card">
+        <div class="sensor-top"><span class="sensor-name">pH probe signal</span><span class="sensor-icon">⚗</span></div>
+        <div class="sensor-value" id="phValue">-- <span class="sensor-unit">V</span></div>
+        <div class="sensor-foot">ADC reading: <span id="phRaw">--</span></div>
+        <div class="sensor-state">● Sensor voltage</div>
+      </article>
+      <article class="panel sensor-card">
+        <div class="sensor-top"><span class="sensor-name">TDS probe signal</span><span class="sensor-icon">≋</span></div>
+        <div class="sensor-value" id="tdsValue">-- <span class="sensor-unit">V</span></div>
+        <div class="sensor-foot">ADC reading: <span id="tdsRaw">--</span></div>
+        <div class="sensor-state">● Sensor voltage</div>
+      </article>
+      <article class="panel sensor-card">
+        <div class="sensor-top"><span class="sensor-name">Water temperature</span><span class="sensor-icon">♨</span></div>
+        <div class="sensor-value" id="tempValue">-- <span class="sensor-unit">°C</span></div>
+        <div class="sensor-foot">DS18B20 waterproof sensor</div>
+        <div class="sensor-state" id="tempState">● Awaiting reading</div>
+      </article>
+    </section>
+
+    <div class="section-heading" id="baseline">
+      <div><h2>Baseline comparison</h2><p>Live readings compared with your configured reference values</p></div>
+    </div>
+
+    <section class="comparison-grid">
+      <article class="panel compare-card">
+        <h3>pH probe voltage</h3>
+        <div class="compare-values"><span>Live</span><strong id="phLiveCompare">-- V</strong></div>
+        <div class="compare-values" style="margin-top:7px"><span>Baseline</span><strong id="phBaseCompare">-- V</strong></div>
+        <div class="progress"><div class="progress-fill" id="phProgress"></div></div>
+        <div class="delta" id="phDelta">Waiting for data</div>
+      </article>
+      <article class="panel compare-card">
+        <h3>TDS probe voltage</h3>
+        <div class="compare-values"><span>Live</span><strong id="tdsLiveCompare">-- V</strong></div>
+        <div class="compare-values" style="margin-top:7px"><span>Baseline</span><strong id="tdsBaseCompare">-- V</strong></div>
+        <div class="progress"><div class="progress-fill" id="tdsProgress"></div></div>
+        <div class="delta" id="tdsDelta">Waiting for data</div>
+      </article>
+      <article class="panel compare-card">
+        <h3>Water temperature</h3>
+        <div class="compare-values"><span>Live</span><strong id="tempLiveCompare">-- °C</strong></div>
+        <div class="compare-values" style="margin-top:7px"><span>Baseline</span><strong id="tempBaseCompare">-- °C</strong></div>
+        <div class="progress"><div class="progress-fill" id="tempProgress"></div></div>
+        <div class="delta" id="tempDelta">Waiting for data</div>
+      </article>
+    </section>
+
+    <div class="section-heading" id="alerts">
+      <div><h2>Monitoring observations</h2><p>Automated flags based on the baseline settings</p></div>
+    </div>
+
+    <section class="info-grid">
+      <article class="panel">
+        <h2 style="font-size:14px;margin:0 0 8px">Current alerts</h2>
+        <div id="alertList"><div class="muted">Waiting for the first sensor readings...</div></div>
+      </article>
+      <article class="panel">
+        <h2 style="font-size:14px;margin:0 0 8px">Device information</h2>
+        <div class="alert-row"><span class="alert-mark" id="deviceMark"></span><div><div class="alert-title">Device connection</div><div class="alert-detail" id="deviceStatus">Waiting for connection</div></div></div>
+        <div class="alert-row"><span class="alert-mark"></span><div><div class="alert-title">Data refresh</div><div class="alert-detail">Every 2 seconds</div></div></div>
+        <div class="alert-row"><span class="alert-mark"></span><div><div class="alert-title">Device uptime</div><div class="alert-detail" id="uptime">--</div></div></div>
+        <div class="alert-row"><span class="alert-mark"></span><div><div class="alert-title">Last update</div><div class="alert-detail" id="lastUpdate">--</div></div></div>
+      </article>
+    </section>
+
+    <section class="panel settings-panel" id="settingsPanel" style="margin-top:20px">
+      <div class="section-heading" style="margin:0 0 17px">
+        <div><h2>Site settings and baseline values</h2><p>These settings are saved in this browser</p></div>
+      </div>
+      <div class="settings-grid">
+        <div class="field"><label for="siteName">Monitoring site name</label><input id="siteName" maxlength="45" placeholder="e.g. River monitoring point 01"></div>
+        <div class="field"><label for="siteLocation">Location / river name</label><input id="siteLocation" maxlength="70" placeholder="e.g. Liesbeek River, Cape Town"></div>
+        <div class="field"><label for="basePH">Baseline pH probe voltage (V)</label><input id="basePH" type="number" min="0" max="3.3" step="0.001"></div>
+        <div class="field"><label for="baseTDS">Baseline TDS probe voltage (V)</label><input id="baseTDS" type="number" min="0" max="3.3" step="0.001"></div>
+        <div class="field"><label for="baseTemp">Baseline water temperature (°C)</label><input id="baseTemp" type="number" min="-10" max="60" step="0.1"></div>
+        <div class="field"><label for="tolerance">Alert threshold (%)</label><input id="tolerance" type="number" min="1" max="100" step="1"></div>
+      </div>
+      <div class="button-row">
+        <button class="btn primary" onclick="saveSettings()">Save settings</button>
+        <button class="btn" onclick="resetSettings()">Reset defaults</button>
+        <button class="btn" onclick="toggleSettings()">Close settings</button>
+      </div>
+      <p class="muted">Baseline values are reference points for this browser. Choose them from suitable local reference data or verified measurements from the site, not arbitrary values.</p>
+    </section>
+
+    <div class="section-heading">
+      <div><h2>Language</h2><p>Translation is provided by Google and requires internet access</p></div>
+    </div>
+    <section class="panel"><div id="google_translate_element"></div><p class="muted">If the translation service does not load, use your browser's built-in page translation.</p></section>
+
+    <footer class="footer">CHEMTRACE · Freshwater monitoring prototype · Readings are for investigation support, not a standalone pollution diagnosis.</footer>
+  </main>
+</div>
+
+<script>
+const DEFAULTS = {
+  siteName: "Freshwater monitoring site",
+  siteLocation: "Location not configured",
+  basePH: 1.650,
+  baseTDS: 1.650,
+  baseTemp: 20.0,
+  tolerance: 15
+};
+
+let settings = {...DEFAULTS};
+let latestData = null;
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("chemtraceSettings") || "{}");
+    settings = {...DEFAULTS, ...saved};
+  } catch (e) {
+    settings = {...DEFAULTS};
+  }
+  document.getElementById("siteName").value = settings.siteName;
+  document.getElementById("siteLocation").value = settings.siteLocation;
+  document.getElementById("basePH").value = settings.basePH;
+  document.getElementById("baseTDS").value = settings.baseTDS;
+  document.getElementById("baseTemp").value = settings.baseTemp;
+  document.getElementById("tolerance").value = settings.tolerance;
+  updateSiteLabels();
+}
+
+function saveSettings() {
+  const values = {
+    siteName: document.getElementById("siteName").value.trim() || DEFAULTS.siteName,
+    siteLocation: document.getElementById("siteLocation").value.trim() || DEFAULTS.siteLocation,
+    basePH: Number(document.getElementById("basePH").value),
+    baseTDS: Number(document.getElementById("baseTDS").value),
+    baseTemp: Number(document.getElementById("baseTemp").value),
+    tolerance: Number(document.getElementById("tolerance").value)
+  };
+
+  if (![values.basePH, values.baseTDS, values.baseTemp, values.tolerance].every(Number.isFinite) ||
+      values.basePH < 0 || values.basePH > 3.3 ||
+      values.baseTDS < 0 || values.baseTDS > 3.3 ||
+      values.baseTemp < -10 || values.baseTemp > 60 ||
+      values.tolerance < 1 || values.tolerance > 100) {
+    alert("Please enter valid baseline values and an alert threshold.");
+    return;
+  }
+
+  settings = values;
+  localStorage.setItem("chemtraceSettings", JSON.stringify(settings));
+  updateSiteLabels();
+  if (latestData) updateComparisons(latestData);
+  alert("CHEMTRACE settings saved in this browser.");
+}
+
+function resetSettings() {
+  if (!confirm("Reset the site and baseline settings to their defaults?")) return;
+  settings = {...DEFAULTS};
+  localStorage.removeItem("chemtraceSettings");
+  loadSettings();
+  if (latestData) updateComparisons(latestData);
+}
+
+function updateSiteLabels() {
+  document.getElementById("siteNameDisplay").textContent = settings.siteName;
+  document.getElementById("locationDisplay").textContent = settings.siteLocation;
+}
+
+function toggleSettings() {
+  document.getElementById("settingsPanel").classList.toggle("open");
+  document.getElementById("settingsPanel").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function openSidebar() {
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("overlay").classList.add("show");
+}
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+function setConnection(online, message) {
+  document.getElementById("connectionText").textContent = message;
+  document.getElementById("connectionDot").className = "dot " + (online ? "live" : "offline");
+  document.getElementById("deviceMark").className = "alert-mark " + (online ? "" : "alert");
+  document.getElementById("deviceStatus").textContent = online ? "Connected and receiving readings" : "No data received. Check Wi-Fi and device power.";
+}
+
+function compareValue(prefix, live, baseline, unit, threshold) {
+  const liveText = Number.isFinite(live) ? live.toFixed(2) + " " + unit : "Unavailable";
+  document.getElementById(prefix + "LiveCompare").textContent = liveText;
+  document.getElementById(prefix + "BaseCompare").textContent = baseline.toFixed(2) + " " + unit;
+
+  const deltaEl = document.getElementById(prefix + "Delta");
+  const progressEl = document.getElementById(prefix + "Progress");
+
+  if (!Number.isFinite(live)) {
+    deltaEl.textContent = "Sensor reading unavailable";
+    deltaEl.className = "delta alert";
+    progressEl.style.width = "0%";
+    return {level:"alert", message:prefix.toUpperCase() + " reading unavailable"};
+  }
+
+  const difference = Math.abs(live - baseline);
+  const percent = Math.abs(baseline) > 0.0001 ? (difference / Math.abs(baseline)) * 100 : (difference === 0 ? 0 : 100);
+  const level = percent > threshold ? "alert" : percent > threshold * 0.65 ? "warning" : "normal";
+
+  deltaEl.textContent = (live >= baseline ? "▲ " : "▼ ") + difference.toFixed(3) + " " + unit +
+    " from baseline (" + percent.toFixed(1) + "%)";
+  deltaEl.className = "delta " + level;
+  progressEl.style.width = Math.min(percent, 100) + "%";
+  progressEl.style.background = level === "alert" ? "var(--red)" : level === "warning" ? "var(--yellow)" : "var(--green)";
+
+  return {level, message:prefix.toUpperCase() + " differs from baseline by " + percent.toFixed(1) + "%"};
+}
+
+function updateComparisons(d) {
+  const ph = compareValue("ph", d.phVoltage, Number(settings.basePH), "V", Number(settings.tolerance));
+  const tds = compareValue("tds", d.tdsVoltage, Number(settings.baseTDS), "V", Number(settings.tolerance));
+  const temp = compareValue("temp", d.temperatureValid ? d.temperature : NaN, Number(settings.baseTemp), "°C", Number(settings.tolerance));
+
+  const alerts = [ph, tds, temp].filter(x => x.level !== "normal");
+  const list = document.getElementById("alertList");
+  if (!alerts.length) {
+    list.innerHTML = '<div class="alert-row"><span class="alert-mark"></span><div><div class="alert-title">No significant baseline deviations</div><div class="alert-detail">Current readings are within the configured comparison threshold. This does not guarantee that the water is safe.</div></div></div>';
+  } else {
+    list.innerHTML = alerts.map(a =>
+      '<div class="alert-row"><span class="alert-mark ' + a.level + '"></span><div><div class="alert-title">' +
+      (a.level === "alert" ? "Baseline deviation detected" : "Baseline change detected") +
+      '</div><div class="alert-detail">' + a.message + '. Consider checking the site and validating the reading.</div></div></div>'
+    ).join("");
+  }
+}
+
+async function updateData() {
+  try {
+    const response = await fetch("/data", {cache:"no-store"});
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const d = await response.json();
+
+    d.temperatureValid = Number.isFinite(d.temperature) && d.temperature > -100 && d.temperature < 85;
+    latestData = d;
+
+    document.getElementById("phValue").innerHTML = Number(d.phVoltage).toFixed(3) + ' <span class="sensor-unit">V</span>';
+    document.getElementById("phRaw").textContent = d.phRaw;
+    document.getElementById("tdsValue").innerHTML = Number(d.tdsVoltage).toFixed(3) + ' <span class="sensor-unit">V</span>';
+    document.getElementById("tdsRaw").textContent = d.tdsRaw;
+
+    document.getElementById("tempValue").innerHTML = d.temperatureValid
+      ? Number(d.temperature).toFixed(2) + ' <span class="sensor-unit">°C</span>'
+      : 'Sensor error';
+    document.getElementById("tempState").textContent = d.temperatureValid ? "● Sensor operating" : "● Check temperature sensor";
+
+    updateComparisons(d);
+    setConnection(true, "LIVE CONNECTION");
+    document.getElementById("uptime").textContent = formatUptime(d.uptimeSeconds);
+    document.getElementById("lastUpdate").textContent = new Date().toLocaleTimeString();
+  } catch (error) {
+    setConnection(false, "CONNECTION LOST");
+  }
+}
+
+function formatUptime(seconds) {
+  seconds = Math.max(0, Number(seconds) || 0);
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return days + "d " + hours + "h " + minutes + "m";
+}
+
+loadSettings();
+updateData();
+setInterval(updateData, 2000);
+</script>
+
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement(
+    {pageLanguage: 'en', includedLanguages: 'af,en,xh,zu,st,tn,fr,es,pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE},
+    'google_translate_element'
+  );
+}
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
+)CHEMTRACE"
